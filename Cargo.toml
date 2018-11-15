@@ -1,0 +1,8 @@
+[package]
+name = "pin-collections"
+version = "0.1.0"
+authors = ["Wim Looman <wim@nemo157.com>"]
+edition = "2018"
+
+[dependencies]
+pin-utils = "0.1.0-alpha.3"
