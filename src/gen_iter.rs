@@ -23,9 +23,8 @@ impl<G: Generator<Return = ()>> GenIter<G> {
 impl<G: Generator<Return = ()>> PinIterator for GenIter<G> {
     type Item = G::Yield;
 
-    fn next(mut self: Pin<&mut Self>) -> Option<Self::Item> {
-        // TODO: https://github.com/rust-lang/rust/pull/55704
-        match unsafe { Pin::get_mut_unchecked(self.gen()).resume() } {
+    fn next(self: Pin<&mut Self>) -> Option<Self::Item> {
+        match self.gen().resume() {
             GeneratorState::Yielded(item) => Some(item),
             GeneratorState::Complete(()) => None,
         }

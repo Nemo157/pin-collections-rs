@@ -26,21 +26,21 @@ impl<T> List<T> {
 
     pub fn push(mut self: Pin<&mut Self>, mut node: Pin<&mut Node<T>>) {
         node.as_mut().on_attached();
-        *node.next() = *self.head();
-        *self.head() = node.as_ptr();
+        *node.as_mut().next() = *self.as_mut().head();
+        *self.as_mut().head() = node.as_mut().as_ptr();
     }
 
     pub fn remove(mut self: Pin<&mut Self>, mut to_remove: Pin<&mut Node<T>>) -> bool {
-        if *self.head() == to_remove.as_mut().as_ptr() {
-            *self.head() = *to_remove.next();
-            to_remove.on_detached();
+        if *self.as_mut().head() == to_remove.as_mut().as_ptr() {
+            *self.as_mut().head() = *to_remove.as_mut().next();
+            to_remove.as_mut().on_detached();
             return true;
         }
 
         pin_let!(nodes = self.iter_nodes());
         while let Some(node) = nodes.as_mut().next() {
             if node.next == to_remove.as_mut().as_ptr() {
-                unsafe { Pin::get_mut_unchecked(node) }.next = to_remove.next;
+                unsafe { Pin::get_unchecked_mut(node) }.next = to_remove.next;
                 to_remove.on_detached();
                 return true;
             }
@@ -53,7 +53,7 @@ impl<T> List<T> {
         self: Pin<&'a mut Self>,
     ) -> impl PinIterator<Item = Pin<&'a mut Node<T>>> + 'a {
         gen_iter! {
-            let mut node = unsafe { Pin::get_mut_unchecked(self).head };
+            let mut node = unsafe { Pin::get_unchecked_mut(self).head };
             while node != ptr::null_mut() {
                 yield unsafe { Pin::new_unchecked(&mut *node) };
                 node = unsafe { (*node).next };
@@ -67,7 +67,7 @@ impl<T> List<T> {
             // while let Some(mut node) = nodes.as_mut().next() {
             //     yield &mut *node.value();
             // }
-            let mut node = unsafe { Pin::get_mut_unchecked(self).head };
+            let mut node = unsafe { Pin::get_unchecked_mut(self).head };
             while node != ptr::null_mut() {
                 yield unsafe { &mut (*node).value };
                 node = unsafe { (*node).next };
@@ -90,21 +90,21 @@ impl<T> Node<T> {
     }
 
     fn as_ptr(self: Pin<&mut Self>) -> *mut Self {
-        unsafe { Pin::get_mut_unchecked(self) as *mut Self }
+        unsafe { Pin::get_unchecked_mut(self) as *mut Self }
     }
 
     fn on_attached(mut self: Pin<&mut Self>) {
-        if *self.attached() {
+        if *self.as_mut().attached() {
             panic!("node attached while still attached to another list");
         }
-        *self.attached() = true;
+        *self.as_mut().attached() = true;
     }
 
     fn on_detached(mut self: Pin<&mut Self>) {
-        if !*self.attached() {
+        if !*self.as_mut().attached() {
             panic!("node detached while not attached to a list");
         }
-        *self.attached() = false;
+        *self.as_mut().attached() = false;
     }
 }
 

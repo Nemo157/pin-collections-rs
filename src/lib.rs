@@ -4,7 +4,6 @@
     existential_type,
     generators,
     generator_trait,
-    pin
 )]
 
 #[doc(hidden)]
