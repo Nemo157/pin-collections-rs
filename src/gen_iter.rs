@@ -3,12 +3,14 @@ use {
         ops::{Generator, GeneratorState},
         pin::Pin,
     },
-    pin_utils::unsafe_pinned,
+    pin_project::unsafe_project,
 };
 
 use crate::PinIterator;
 
+#[unsafe_project(Unpin)]
 pub struct GenIter<G> {
+    #[pin]
     gen: G,
 }
 
@@ -16,15 +18,13 @@ impl<G: Generator<Return = ()>> GenIter<G> {
     pub fn new(gen: G) -> GenIter<G> {
         GenIter { gen }
     }
-
-    unsafe_pinned!(gen: G);
 }
 
 impl<G: Generator<Return = ()>> PinIterator for GenIter<G> {
     type Item = G::Yield;
 
     fn next(self: Pin<&mut Self>) -> Option<Self::Item> {
-        match self.gen().resume() {
+        match self.project().gen.resume() {
             GeneratorState::Yielded(item) => Some(item),
             GeneratorState::Complete(()) => None,
         }

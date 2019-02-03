@@ -1,14 +1,16 @@
 use {
     core::{pin::Pin, ptr},
-    pin_utils::unsafe_unpinned,
+    pin_project::unsafe_project,
 };
 
 use crate::{gen_iter, pin_let, PinIterator};
 
+#[unsafe_project]
 pub struct List<T> {
     head: *mut Node<T>,
 }
 
+#[unsafe_project]
 pub struct Node<T> {
     next: *mut Node<T>,
     attached: bool,
@@ -16,31 +18,31 @@ pub struct Node<T> {
 }
 
 impl<T> List<T> {
-    unsafe_unpinned!(head: *mut Node<T>);
-
     pub fn new() -> List<T> {
         List {
             head: ptr::null_mut(),
         }
     }
 
-    pub fn push(mut self: Pin<&mut Self>, mut node: Pin<&mut Node<T>>) {
+    pub fn push(self: Pin<&mut Self>, mut node: Pin<&mut Node<T>>) {
+        let this = self.project();
         node.as_mut().on_attached();
-        *node.as_mut().next() = *self.as_mut().head();
-        *self.as_mut().head() = node.as_mut().as_ptr();
+        *node.as_mut().project().next = *this.head;
+        *this.head = node.as_ptr();
     }
 
     pub fn remove(mut self: Pin<&mut Self>, mut to_remove: Pin<&mut Node<T>>) -> bool {
-        if *self.as_mut().head() == to_remove.as_mut().as_ptr() {
-            *self.as_mut().head() = *to_remove.as_mut().next();
-            to_remove.as_mut().on_detached();
+        let this = self.as_mut().project();
+        if *this.head == to_remove.as_mut().as_ptr() {
+            *this.head = *to_remove.as_mut().project().next;
+            to_remove.on_detached();
             return true;
         }
 
         pin_let!(nodes = self.iter_nodes());
         while let Some(node) = nodes.as_mut().next() {
             if node.next == to_remove.as_mut().as_ptr() {
-                unsafe { Pin::get_unchecked_mut(node) }.next = to_remove.next;
+                *node.project().next = *to_remove.as_mut().project().next;
                 to_remove.on_detached();
                 return true;
             }
@@ -65,17 +67,13 @@ impl<T> List<T> {
         gen_iter! {
             pin_let!(nodes = self.iter_nodes());
             while let Some(node) = nodes.as_mut().next() {
-                yield &mut *node.value();
+                yield node.project().value;
             }
         }
     }
 }
 
 impl<T> Node<T> {
-    unsafe_unpinned!(attached: bool);
-    unsafe_unpinned!(next: *mut Self);
-    unsafe_unpinned!(value: T);
-
     pub fn new(value: T) -> Node<T> {
         Node {
             next: ptr::null_mut(),
@@ -88,18 +86,20 @@ impl<T> Node<T> {
         unsafe { Pin::get_unchecked_mut(self) as *mut Self }
     }
 
-    fn on_attached(mut self: Pin<&mut Self>) {
-        if *self.as_mut().attached() {
+    fn on_attached(self: Pin<&mut Self>) {
+        let this = self.project();
+        if *this.attached {
             panic!("node attached while still attached to another list");
         }
-        *self.as_mut().attached() = true;
+        *this.attached = true;
     }
 
-    fn on_detached(mut self: Pin<&mut Self>) {
-        if !*self.as_mut().attached() {
+    fn on_detached(self: Pin<&mut Self>) {
+        let this = self.project();
+        if !*this.attached {
             panic!("node detached while not attached to a list");
         }
-        *self.as_mut().attached() = false;
+        *this.attached = false;
     }
 }
 
