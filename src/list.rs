@@ -63,14 +63,9 @@ impl<T> List<T> {
 
     pub fn iter<'a>(self: Pin<&'a mut Self>) -> impl PinIterator<Item = &'a mut T> + 'a {
         gen_iter! {
-            // pin_let!(nodes = self.iter_nodes());
-            // while let Some(mut node) = nodes.as_mut().next() {
-            //     yield &mut *node.value();
-            // }
-            let mut node = unsafe { Pin::get_unchecked_mut(self).head };
-            while node != ptr::null_mut() {
-                yield unsafe { &mut (*node).value };
-                node = unsafe { (*node).next };
+            pin_let!(nodes = self.iter_nodes());
+            while let Some(node) = nodes.as_mut().next() {
+                yield &mut *node.value();
             }
         }
     }
