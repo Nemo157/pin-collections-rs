@@ -1,6 +1,6 @@
 use {
     core::pin::Pin,
-    pin_utils::pin_mut,
+    ergo_pin::ergo_pin,
 };
 
 existential type PinIterator__Iter<I: PinIterator>: Iterator<Item = I::Item>;
@@ -46,9 +46,9 @@ where
     I: PinIterator,
     F: FnMut(I::Item) -> R,
 {
+    #[ergo_pin]
     gen_iter! {
-        pin_mut!(iter);
-        for item in iter.iter() {
+        for item in pin!(iter).iter() {
             yield f(item);
         }
     }

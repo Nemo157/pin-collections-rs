@@ -5,5 +5,5 @@ authors = ["Wim Looman <wim@nemo157.com>"]
 edition = "2018"
 
 [dependencies]
-pin-utils = "0.1.0-alpha.3"
 pin-project = "0.1.8"
+ergo-pin = { git = "https://github.com/Nemo157/ergo-pin-rs" }

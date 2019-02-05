@@ -1,9 +1,10 @@
 use {
     core::{pin::Pin, ptr},
     pin_project::unsafe_project,
+    ergo_pin::ergo_pin,
 };
 
-use crate::{gen_iter, pin_let, PinIterator};
+use crate::{gen_iter, PinIterator};
 
 #[unsafe_project]
 pub struct List<T> {
@@ -31,6 +32,7 @@ impl<T> List<T> {
         *this.head = node.as_ptr();
     }
 
+    #[ergo_pin]
     pub fn remove(mut self: Pin<&mut Self>, mut to_remove: Pin<&mut Node<T>>) -> bool {
         let this = self.as_mut().project();
         if *this.head == to_remove.as_mut().as_ptr() {
@@ -39,8 +41,7 @@ impl<T> List<T> {
             return true;
         }
 
-        pin_let!(nodes = self.iter_nodes());
-        for node in nodes.as_mut().iter() {
+        for node in pin!(self.iter_nodes()).iter() {
             if node.next == to_remove.as_mut().as_ptr() {
                 *node.project().next = *to_remove.as_mut().project().next;
                 to_remove.on_detached();
@@ -64,9 +65,9 @@ impl<T> List<T> {
     }
 
     pub fn iter<'a>(self: Pin<&'a mut Self>) -> impl PinIterator<Item = &'a mut T> + 'a {
+        #[ergo_pin]
         gen_iter! {
-            pin_let!(nodes = self.iter_nodes());
-            for node in nodes.as_mut().iter() {
+            for node in pin!(self.iter_nodes()).iter() {
                 yield node.project().value;
             }
         }

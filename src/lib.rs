@@ -4,15 +4,12 @@
     existential_type,
     generators,
     generator_trait,
+    proc_macro_hygiene,
 )]
 
 #[doc(hidden)]
 #[macro_use]
 pub mod gen_iter;
-
-#[doc(hidden)]
-#[macro_use]
-mod utils;
 
 pub mod iter;
 pub use self::iter::{FusedPinIterator, PinIterator};
