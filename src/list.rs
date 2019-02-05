@@ -40,7 +40,7 @@ impl<T> List<T> {
         }
 
         pin_let!(nodes = self.iter_nodes());
-        while let Some(node) = nodes.as_mut().next() {
+        for node in nodes.as_mut().iter() {
             if node.next == to_remove.as_mut().as_ptr() {
                 *node.project().next = *to_remove.as_mut().project().next;
                 to_remove.on_detached();
@@ -66,7 +66,7 @@ impl<T> List<T> {
     pub fn iter<'a>(self: Pin<&'a mut Self>) -> impl PinIterator<Item = &'a mut T> + 'a {
         gen_iter! {
             pin_let!(nodes = self.iter_nodes());
-            while let Some(node) = nodes.as_mut().next() {
+            for node in nodes.as_mut().iter() {
                 yield node.project().value;
             }
         }

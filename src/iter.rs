@@ -1,5 +1,5 @@
 use {
-    core::{marker::Unpin, pin::Pin},
+    core::pin::Pin,
     pin_utils::pin_mut,
 };
 
