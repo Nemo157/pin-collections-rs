@@ -28,6 +28,9 @@ pub trait PinIterator {
     }
 }
 
+pub trait FusedPinIterator: PinIterator {
+}
+
 impl<P: PinIterator + ?Sized> PinIterator for Pin<&mut P> {
     type Item = P::Item;
 

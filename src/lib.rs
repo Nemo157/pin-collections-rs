@@ -15,6 +15,6 @@ pub mod gen_iter;
 mod utils;
 
 pub mod pin_iterator;
-pub use self::pin_iterator::{map, PinIterator};
+pub use self::pin_iterator::{map, FusedPinIterator, PinIterator};
 
 pub mod list;
