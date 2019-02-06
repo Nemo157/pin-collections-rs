@@ -4,6 +4,7 @@ use {
 };
 
 existential type PinIterator__Iter<I: PinIterator>: Iterator<Item = I::Item>;
+existential type PinIterator__Map<I: PinIterator, F: FnMut(I::Item) -> R, R>: PinIterator<Item = R>;
 
 pub trait PinIterator {
     type Item;
@@ -26,6 +27,19 @@ pub trait PinIterator {
 
         P(self)
     }
+
+    fn map<F, R>(self, mut f: F) -> PinIterator__Map<Self, F, R>
+    where
+        Self: Sized,
+        F: FnMut(Self::Item) -> R,
+    {
+        #[ergo_pin]
+        gen_iter! {
+            for item in pin!(self).iter() {
+                yield f(item);
+            }
+        }
+    }
 }
 
 pub trait FusedPinIterator: PinIterator {
@@ -36,20 +50,5 @@ impl<P: PinIterator + ?Sized> PinIterator for Pin<&mut P> {
 
     fn next(self: Pin<&mut Self>) -> Option<Self::Item> {
         Pin::get_mut(self).as_mut().next()
-    }
-}
-
-// TODO: This should be a provided method on `PinIterator`, but existential
-// types + closures don't mix well currently.
-pub fn map<I, F, R>(iter: I, mut f: F) -> impl PinIterator<Item = R>
-where
-    I: PinIterator,
-    F: FnMut(I::Item) -> R,
-{
-    #[ergo_pin]
-    gen_iter! {
-        for item in pin!(iter).iter() {
-            yield f(item);
-        }
     }
 }
