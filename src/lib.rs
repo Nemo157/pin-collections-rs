@@ -12,6 +12,8 @@
 pub mod gen_iter;
 
 pub mod iter;
-pub use self::iter::{FusedPinIterator, PinIterator};
+pub use self::iter::{FusedPinIterator, PinIterator, IntoPinIterator};
 
 pub mod list;
+
+mod slice;

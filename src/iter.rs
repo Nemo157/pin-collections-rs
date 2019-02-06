@@ -31,6 +31,22 @@ pub trait PinIterator {
 pub trait FusedPinIterator: PinIterator {
 }
 
+pub trait IntoPinIterator {
+    type Item;
+    type IntoIter: PinIterator<Item = Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter;
+}
+
+impl<P: PinIterator> IntoPinIterator for P {
+    type Item = <Self as PinIterator>::Item;
+    type IntoIter = Self;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self
+    }
+}
+
 impl<P: PinIterator + ?Sized> PinIterator for Pin<&mut P> {
     type Item = P::Item;
 
